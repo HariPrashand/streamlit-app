@@ -317,9 +317,8 @@ if st.session_state.get('logged_in'):
                     NonAdherent_count += 1
                 df1.loc[index, 'Adherence'] = predicted_adherence
                 if predicted_adherence == "NON-ADHERENT":
-                    client = Client("yuva2110/vanilla-charbot")
-                    result = client.predict(
-                        message=f"""Provide a detailed set of recommendations for patients with {row['Disease']} in the therapeutic area of {row['TherapeuticArea']}, who are currently using the specialty pharma product {row['SpecialtyPharma']} and taking {row['MedicationName']}. The goal is to encourage patients to continue their medication to avoid future expenses and explain the risks associated with discontinuation in a detailed manner. Focus on retaining patients and offer practical advice and suggestions. Include the name {row['BrandName']} in the recommendations.
+                    result = ""
+                    s = f"""Provide a detailed set of recommendations for patients with {row['Disease']} in the therapeutic area of {row['TherapeuticArea']}, who are currently using the specialty pharma product {row['SpecialtyPharma']} and taking {row['MedicationName']}. The goal is to encourage patients to continue their medication to avoid future expenses and explain the risks associated with discontinuation in a detailed manner. Focus on retaining patients and offer practical advice and suggestions. Include the name {row['BrandName']} in the recommendations.
 
                             Include the following points:
 
@@ -346,23 +345,50 @@ if st.session_state.get('logged_in'):
                             A message of support, encouraging patients to stay committed to their treatment plan for better health outcomes.
                             Make the patient to stay with the particular brand name {row['BrandName']} and try to provide a non affective discount and goodies from the company sign below with particular brand name or company name. make the response brief and powerful.
                             limit the response to 200 words
-                            """,
-                        system_message="You are a friendly Chatbot.",
-                        max_tokens=512,
+                            """
+                    from huggingface_hub import InferenceClient
+
+                    client = InferenceClient(api_key="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")
+
+                    messages = [
+                        { "role": "user", "content": s }
+                    ]
+
+                    stream = client.chat.completions.create(
+                        model="HuggingFaceH4/zephyr-7b-beta", 
+                        messages=messages, 
                         temperature=0.7,
-                        top_p=0.95,
-                        api_name="/chat"
+                        max_tokens=1024,
+                        top_p=0.7,
+                        stream=True
                     )
+                    
+                    for chunk in stream:
+                        result += chunk.choices[0].delta.content
+                    
                 else:
-                    client = Client("yuva2110/vanilla-charbot")
-                    result = client.predict(
-                        message=f"give appreciation for patients with {row['Disease']} in therapeutic area of {row['TherapeuticArea']} taking speciality pharma of {row['SpecialtyPharma']} and medication {row['MedicationName']} to continue there medication to avoid future expenses and say them about the risks involved with discontinuation in detailed manner and make them retained and feel good about their progress and give name as {row['BrandName']} , give in points",
-                        system_message="You are a friendly Chatbot.",
-                        max_tokens=512,
+                    s = f"give appreciation for patients with {row['Disease']} in therapeutic area of {row['TherapeuticArea']} taking speciality pharma of {row['SpecialtyPharma']} and medication {row['MedicationName']} to continue there medication to avoid future expenses and say them about the risks involved with discontinuation in detailed manner and make them retained and feel good about their progress and give name as {row['BrandName']} , give in points"
+                    result = ""
+                    from huggingface_hub import InferenceClient
+
+                    client = InferenceClient(api_key="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")
+
+                    messages = [
+                        { "role": "user", "content": s }
+                    ]
+
+                    stream = client.chat.completions.create(
+                        model="HuggingFaceH4/zephyr-7b-beta", 
+                        messages=messages, 
                         temperature=0.7,
-                        top_p=0.95,
-                        api_name="/chat"
+                        max_tokens=1024,
+                        top_p=0.7,
+                        stream=True
                     )
+                    
+                    for chunk in stream:
+                        result += chunk.choices[0].delta.content
+                    
                 df1.loc[index, 'Recommendation'] = result
                 save_path = "updated_file.xlsx"
                 df1.to_excel(save_path, index=False, engine='openpyxl')
@@ -501,9 +527,7 @@ if st.session_state.get('logged_in'):
                     unsafe_allow_html=True
                 )
             if predicted_adherence == "NON-ADHERENT":
-                client = Client("yuva2110/vanilla-charbot")
-                result = client.predict(
-                    message=f"""Provide a detailed set of recommendations for patients with {disease} in the therapeutic area of {therapeutic_area}, who are currently using the specialty pharma product {specialty_pharma} and taking {medication_name}. The goal is to encourage patients to continue their medication to avoid future expenses and explain the risks associated with discontinuation in a detailed manner. Focus on retaining patients and offer practical advice and suggestions. Include the name {brand_name} in the recommendations.
+                s = f"""Provide a detailed set of recommendations for patients with {disease} in the therapeutic area of {therapeutic_area}, who are currently using the specialty pharma product {specialty_pharma} and taking {medication_name}. The goal is to encourage patients to continue their medication to avoid future expenses and explain the risks associated with discontinuation in a detailed manner. Focus on retaining patients and offer practical advice and suggestions. Include the name {brand_name} in the recommendations.
 
                         Include the following points:
 
@@ -530,13 +554,28 @@ if st.session_state.get('logged_in'):
                         A message of support, encouraging patients to stay committed to their treatment plan for better health outcomes.
                         Make the patient to stay with the particular brand name {brand_name} and try to provide a non affective discount and goodies from the company sign below with particular brand name or company name. make the response brief and powerful.
                         limit the response to 200 words
-                        """,
-                    system_message="You are a friendly Chatbot.",
-                    max_tokens=512,
+                        """
+                result = ""
+                from huggingface_hub import InferenceClient
+
+                client = InferenceClient(api_key="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")
+
+                messages = [
+                    { "role": "user", "content": s }
+                ]
+
+                stream = client.chat.completions.create(
+                    model="HuggingFaceH4/zephyr-7b-beta", 
+                    messages=messages, 
                     temperature=0.7,
-                    top_p=0.95,
-                    api_name="/chat"
+                    max_tokens=1024,
+                    top_p=0.7,
+                    stream=True
                 )
+                
+                for chunk in stream:
+                    result += chunk.choices[0].delta.content
+                    
                 if(is_valid_email(email_id)):
                     send_email(email_id, 'Non - Adherent', result)
                 else:
@@ -551,15 +590,27 @@ if st.session_state.get('logged_in'):
                     unsafe_allow_html=True
                     )
             else:
-                client = Client("yuva2110/vanilla-charbot")
-                result = client.predict(
-                    message=f"give appreciation for patients with {disease} in therapeutic area of {therapeutic_area} taking speciality pharma of {specialty_pharma} and medication {medication_name} to continue there medication to avoid future expenses and say them about the risks involved with discontinuation in detailed manner and make them retained and feel good about their progress and give name as {brand_name} , give in points conclude with the given values",
-                    system_message="You are a friendly Chatbot.",
-                    max_tokens=512,
+                s = f"give appreciation for patients with {disease} in therapeutic area of {therapeutic_area} taking speciality pharma of {specialty_pharma} and medication {medication_name} to continue there medication to avoid future expenses and say them about the risks involved with discontinuation in detailed manner and make them retained and feel good about their progress and give name as {brand_name} , give in points conclude with the given values"
+                result = ""
+                from huggingface_hub import InferenceClient
+
+                client = InferenceClient(api_key="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")
+
+                messages = [
+                    { "role": "user", "content": s }
+                ]
+
+                stream = client.chat.completions.create(
+                    model="HuggingFaceH4/zephyr-7b-beta", 
+                    messages=messages, 
                     temperature=0.7,
-                    top_p=0.95,
-                    api_name="/chat"
+                    max_tokens=1024,
+                    top_p=0.7,
+                    stream=True
                 )
+                
+                for chunk in stream:
+                    result += chunk.choices[0].delta.content
                 if(is_valid_email(email_id)):
                     send_email(email_id, 'Adherent', result)
                 else:
