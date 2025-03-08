@@ -1,107 +1,45 @@
 import streamlit as st
-import random
-import time
-import base64
-from gradio_client import Client
-@st.cache_resource
-def getClient():
-    return Client("yuva2110/vanilla-charbot")
-client=getClient()
-def getChat(question):
-    result = client.predict(
-            message=question,
-            system_message="You are a friendly Chatbot.",
-            max_tokens=512,
-            temperature=0.7,
-            top_p=0.95,
-            api_name="/chat"
-    )
-    return result
+from huggingface_hub import InferenceClient
 
+# Load API Key from Streamlit Secrets
+HF_API_KEY = "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"
+# Initialize Hugging Face API client
+client = InferenceClient(model="HuggingFaceH4/zephyr-7b-beta", token=HF_API_KEY)
 
-# Streamed response emulator
-def response_generator():
-    response = random.choice(
-        [
-            "Hello there! How can I assist you today?",
-            "Hi, human! Is there anything I can help you with?",
-            "Do you need help?",
-        ]
-    )
-    for word in response.split():
-        yield word + " "
-        time.sleep(0.05)
+# Function to get chat response
+def get_chat_response(user_input):
+    try:
+        response = client.text_generation(user_input, max_new_tokens=1024, temperature=0.7, top_p=0.7)
+        return response
+    except Exception as e:
+        return f"Error: {str(e)}"
 
-# Streamed response emulator
-def response_generator():
-    response = random.choice(
-        [
-            "Hello there! How can I assist you today?",
-            "Hi, human! Is there anything I can help you with?",
-            "Do you need help?",
-        ]
-    )
-    for word in response.split():
-        yield word + " "
-        time.sleep(0.05)
-
-def add_bg_from_localchat(image_path):
-    with open(image_path, "rb") as image_file:
-        encoded_string = base64.b64encode(image_file.read()).decode()
-    st.markdown(
-        f"""
-        <style>
-        .ScrollToBottomContainer{{
-            background-image: url("data:image/png;base64,{encoded_string}");
-            background-size: cover;
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-    # Function to add background image to the sidebar
-    def add_bg_to_sidebarchat(image_path):
-        with open(image_path, "rb") as image_file:
-            encoded_string = base64.b64encode(image_file.read()).decode()
-        st.markdown(
-            f"""
-            <style>
-            [data-testid="stSidebar"] > div:first-child {{
-                background-image: url("data:image/png;base64,{encoded_string}");
-                background-size: cover;
-            }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-    # Paths to your local images
-        main_bg_pathchat = 'imagefiles\pexels-padrinan-255379.jpg'
-        sidebar_bg_pathchat = 'imagefiles\pill-tablet-pharmacy-medicine.jpg'
-    # Add background images
-        add_bg_from_localchat(main_bg_pathchat)
-        add_bg_to_sidebarchat(sidebar_bg_pathchat)
+# Streamlit UI
+st.title("🤖 AI Chatbot")
+st.write("Chat with an AI-powered assistant!")
 
 # Initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display chat messages from history on app rerun
+# Display previous chat messages
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
 # Accept user input
-if prompt := st.chat_input("Enter your query"):
+if user_input := st.chat_input("Enter your message..."):
     # Add user message to chat history
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    # Display user message in chat message container
+    st.session_state.messages.append({"role": "user", "content": user_input})
+    
+    # Display user message
     with st.chat_message("user"):
-        st.markdown(prompt)
+        st.markdown(user_input)
 
-    # Display assistant response in chat message container
+    # Get and display AI response
     with st.chat_message("assistant"):
-        response = st.write(getChat(prompt))
-    # Add assistant response to chat history
+        response = get_chat_response(user_input)
+        st.markdown(response)
+
+    # Add AI response to chat history
     st.session_state.messages.append({"role": "assistant", "content": response})
