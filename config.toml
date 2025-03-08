@@ -1,0 +1,7 @@
+
+[browser]
+# Do not enable wide mode by default
+gatherUsageStats = false
+
+[theme]
+base="light"
