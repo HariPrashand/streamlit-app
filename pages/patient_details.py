@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import joblib
 import re
+import os
 from sklearn.pipeline import Pipeline
 from xgboost import XGBClassifier
 from sklearn.impute import SimpleImputer
@@ -22,6 +23,17 @@ email_address = st.secrets["email"]["email_address"]
 email_password = st.secrets["email"]["email_password"]
 smtp_server = st.secrets["email"]["smtp_server"]
 smtp_port = st.secrets["email"]["smtp_port"]
+
+
+def get_health_response(symptoms_text, language_choice="English 🇬🇧"):
+    hf_token = st.secrets.get("huggingface", {}).get("api_key") or os.getenv("HF_API_KEY")
+    client_kwargs = {"hf_token": hf_token} if hf_token else {}
+    client = Client("Sanaullah1122/health", **client_kwargs)
+    return client.predict(
+        symptoms=symptoms_text,
+        language_choice=language_choice,
+        api_name="/predict"
+    )
 
 def send_email(to_email, subject, message):
     # Set up the MIME
@@ -63,7 +75,7 @@ if st.session_state.get('logged_in'):
         }
         </style>
         <div class="report-container">
-            <iframe class="report-iframe" src="https://app.powerbi.com/reportEmbed?reportId=a97f5efa-7c3a-4430-bc10-b70154171e32&autoAuth=true&ctid=ac29cc87-d08e-4f42-bee7-3223d3c25249"></iframe>
+            <iframe class="report-iframe" src="https://hariprashand.github.io/adherence-dashboard/"></iframe>
         </div>
         """,
         unsafe_allow_html=True
@@ -346,48 +358,17 @@ if st.session_state.get('logged_in'):
                             Make the patient to stay with the particular brand name {row['BrandName']} and try to provide a non affective discount and goodies from the company sign below with particular brand name or company name. make the response brief and powerful.
                             limit the response to 200 words
                             """
-                    from huggingface_hub import InferenceClient
-
-                    client = InferenceClient(api_key="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")
-
-                    messages = [
-                        { "role": "user", "content": s }
-                    ]
-
-                    stream = client.chat.completions.create(
-                        model="HuggingFaceH4/zephyr-7b-beta", 
-                        messages=messages, 
-                        temperature=0.7,
-                        max_tokens=1024,
-                        top_p=0.7,
-                        stream=True
-                    )
-                    
-                    for chunk in stream:
-                        result += chunk.choices[0].delta.content
+                    try:
+                        result = str(get_health_response(s))
+                    except Exception as e:
+                        result = f"Error generating recommendation: {str(e)}"
                     
                 else:
                     s = f"give appreciation for patients with {row['Disease']} in therapeutic area of {row['TherapeuticArea']} taking speciality pharma of {row['SpecialtyPharma']} and medication {row['MedicationName']} to continue there medication to avoid future expenses and say them about the risks involved with discontinuation in detailed manner and make them retained and feel good about their progress and give name as {row['BrandName']} , give in points"
-                    result = ""
-                    from huggingface_hub import InferenceClient
-
-                    client = InferenceClient(api_key="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")
-
-                    messages = [
-                        { "role": "user", "content": s }
-                    ]
-
-                    stream = client.chat.completions.create(
-                        model="HuggingFaceH4/zephyr-7b-beta", 
-                        messages=messages, 
-                        temperature=0.7,
-                        max_tokens=1024,
-                        top_p=0.7,
-                        stream=True
-                    )
-                    
-                    for chunk in stream:
-                        result += chunk.choices[0].delta.content
+                    try:
+                        result = str(get_health_response(s))
+                    except Exception as e:
+                        result = f"Error generating recommendation: {str(e)}"
                     
                 df1.loc[index, 'Recommendation'] = result
                 save_path = "updated_file.xlsx"
@@ -555,26 +536,10 @@ if st.session_state.get('logged_in'):
                         Make the patient to stay with the particular brand name {brand_name} and try to provide a non affective discount and goodies from the company sign below with particular brand name or company name. make the response brief and powerful.
                         limit the response to 200 words
                         """
-                result = ""
-                from huggingface_hub import InferenceClient
-
-                client = InferenceClient(api_key="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")
-
-                messages = [
-                    { "role": "user", "content": s }
-                ]
-
-                stream = client.chat.completions.create(
-                    model="HuggingFaceH4/zephyr-7b-beta", 
-                    messages=messages, 
-                    temperature=0.7,
-                    max_tokens=1024,
-                    top_p=0.7,
-                    stream=True
-                )
-                
-                for chunk in stream:
-                    result += chunk.choices[0].delta.content
+                try:
+                    result = str(get_health_response(s))
+                except Exception as e:
+                    result = f"Error generating recommendation: {str(e)}"
                     
                 if(is_valid_email(email_id)):
                     send_email(email_id, 'Non - Adherent', result)
@@ -591,26 +556,10 @@ if st.session_state.get('logged_in'):
                     )
             else:
                 s = f"give appreciation for patients with {disease} in therapeutic area of {therapeutic_area} taking speciality pharma of {specialty_pharma} and medication {medication_name} to continue there medication to avoid future expenses and say them about the risks involved with discontinuation in detailed manner and make them retained and feel good about their progress and give name as {brand_name} , give in points conclude with the given values"
-                result = ""
-                from huggingface_hub import InferenceClient
-
-                client = InferenceClient(api_key="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")
-
-                messages = [
-                    { "role": "user", "content": s }
-                ]
-
-                stream = client.chat.completions.create(
-                    model="HuggingFaceH4/zephyr-7b-beta", 
-                    messages=messages, 
-                    temperature=0.7,
-                    max_tokens=1024,
-                    top_p=0.7,
-                    stream=True
-                )
-                
-                for chunk in stream:
-                    result += chunk.choices[0].delta.content
+                try:
+                    result = str(get_health_response(s))
+                except Exception as e:
+                    result = f"Error generating recommendation: {str(e)}"
                 if(is_valid_email(email_id)):
                     send_email(email_id, 'Adherent', result)
                 else:
