@@ -1,16 +1,23 @@
 import streamlit as st
-from huggingface_hub import InferenceClient
+import os
+from gradio_client import Client
 
-# Load API Key from Streamlit Secrets
-HF_API_KEY = "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"
-# Initialize Hugging Face API client
-client = InferenceClient(model="HuggingFaceH4/zephyr-7b-beta", token=HF_API_KEY)
+
+def get_gradio_client():
+    hf_token = st.secrets.get("huggingface", {}).get("api_key") or os.getenv("HF_API_KEY")
+    client_kwargs = {"hf_token": hf_token} if hf_token else {}
+    return Client("Sanaullah1122/health", **client_kwargs)
 
 # Function to get chat response
 def get_chat_response(user_input):
     try:
-        response = client.text_generation(user_input, max_new_tokens=1024, temperature=0.7, top_p=0.7)
-        return response
+        client = get_gradio_client()
+        response = client.predict(
+            symptoms=user_input,
+            language_choice="English 🇬🇧",
+            api_name="/predict"
+        )
+        return str(response)
     except Exception as e:
         return f"Error: {str(e)}"
 
